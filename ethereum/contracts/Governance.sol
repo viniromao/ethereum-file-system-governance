@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.10;
+
+pragma solidity 0.8.8;
 
 /**
  * @title Governance
@@ -7,27 +8,61 @@ pragma solidity 0.8.10;
  */
 contract Governance {
 
-    uint256 number;
-    address public owner;
+    //section for declaring variables and constructor
+    uint256 public month = 30 days;
+
+    uint256 public lastClosingMonthDate;
+    address payable public contractAdress;
+    uint256 weiAmountToEnter = 200;
+    address public leader;
+
+    mapping (address => bool) public contributorsInfo;
+    address[] public contributors;
 
     constructor() {
-        owner = msg.sender;
+        lastClosingMonthDate = block.timestamp;
+        leader = msg.sender;
     }
 
+    //==================================================================
 
-    /**
-     * @dev Store value in variable
-     * @param num value to store
-     */
-    function store(uint256 num) public {
-        number = num;
+    //section for dealing with enter and exit from the contract
+    
+    function payContribution() public payable {
+        require(msg.value > weiAmountToEnter); //default unit is wei
+        contributorsInfo[msg.sender] = true;
+        contributors.push(msg.sender);
     }
 
-    /**
-     * @dev Return value 
-     * @return value of 'number'
-     */
-    function retrieve() public view returns (uint256){
-        return number;
+    //==================================================================
+
+    //section for dealing with contract maintenance
+
+    function closeMonth() public payable restricted {
+        require(hasPassedOneMont());
+        require(msg.value > .01 ether);
+        
+        for (uint256 index = 0; contributors.length < index; index++) {
+            delete contributorsInfo[contributors[index]];
+        }
+
+        delete contributors;
     }
+
+    //==================================================================
+
+    //financial info from contract
+    function getBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
+    modifier restricted() {
+        require(msg.sender == leader);
+        _;
+    }
+
+    function hasPassedOneMont() internal view returns (bool) {
+        return block.timestamp > lastClosingMonthDate + month;
+    }
+
 }
