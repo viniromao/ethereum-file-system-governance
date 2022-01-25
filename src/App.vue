@@ -27,6 +27,7 @@
         <span>Síndico atual: {{ leader }}</span>
         <span>Balanço do contrato em Wei: {{ balance }}</span>
         <span id="error">{{ errorMessage }}</span>
+        <span>Account connected: {{ accounts[0] }}</span>
       </div>
     </div>
   </div>
@@ -65,8 +66,8 @@ export default {
       try {
       const leader = await contractInstance.methods.payContribution().send({ 
         value: "1000",
-        from: this.accounts[0]}
-      );
+        from: this.accounts[0]
+      });
       console.log(leader)
         } catch (err) {
           this.errorMessage = "Ocorreu um erro na transação com a seguinte mensagem: " + err.message;
