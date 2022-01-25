@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.11;
+pragma solidity ^0.8.11;
 
 /**
  * @title Governance
@@ -58,6 +58,8 @@ contract Governance {
 
     //==================================================================
 
+    //s section for the elections
+
     function holdElection() public contractParticipant {
         // require(block.timestamp > electionDate + leaderTerm);
         // require(block.timestamp > lastClosingMonthDate + 5 days);
@@ -104,6 +106,8 @@ contract Governance {
 
 
     //==================================================================
+
+    //section for creating and administrating projects by the leader
 
     function createInvestment(uint value, address payable targetReciever) public restricted {
         Investment storage investment = investments[totalInvestments++];
