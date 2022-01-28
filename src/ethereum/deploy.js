@@ -4,7 +4,7 @@ import Web3 from "web3";
 import fs from "fs";
 
 const provider = new HDWalletProvider(
-  "juice bicycle seek common shield hello below angry source share exact mobile",
+  "orchard absorb series asthma hole scatter make flush pass high echo lady",
   "https://rinkeby.infura.io/v3/d2659fd6ed594183a92e29330e7b5f14"
 );
 const web3 = new Web3(provider);
@@ -22,7 +22,7 @@ const deploy = async () => {
 
   const contract = await new web3.eth.Contract(abi)
   .deploy({ data: contractBytecode })
-  .send({ gas: '4600000', from: accounts[0] });
+  .send({ gas: '16000000', from: accounts[0] });
 
   const contractObject = {};
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.8.11;
+pragma solidity 0.8.11;
 
 /**
  * @title Governance
@@ -9,9 +9,10 @@ pragma solidity ^0.8.11;
 contract Governance {
 
     //section for declaring variables and constructor
-    struct Investment {
+    struct Project {
         uint value;
         address payable targetReciever;
+        string description;
         bool closed;
         uint approvalCount;
         mapping(address => bool) approvals;
@@ -25,14 +26,23 @@ contract Governance {
         mapping(address => uint256) votes;
     }
 
+    struct Backer {
+        uint amountInvested;
+        uint balance;
+        address payable recipient;
+    }
+
+    mapping(address => Backer) public backers;
+    uint256 totalBackers = 0;
+
     uint public totalElections = 0;
     mapping(uint => Election) public elections;
 
     uint public totalApprovers;
     mapping(address => bool) public approvers;
 
-    uint public totalInvestments = 0;
-    mapping (uint => Investment) public investments;
+    uint public totalProjects = 0;
+    mapping (uint => Project) public projects;
 
     uint256 public month = 30 days;
 
@@ -58,7 +68,35 @@ contract Governance {
 
     //==================================================================
 
-    //s section for the elections
+    function invest(uint256 amount) public payable {
+        require(msg.value > amount);
+        require(backers[msg.sender].recipient == address(0x0));
+
+        Backer memory backer;
+        backer.amountInvested = amount;
+        backer.balance = getBalance();
+        backer.recipient = payable(msg.sender);
+
+        backers[msg.sender] = backer;
+
+        totalBackers++;
+    }
+
+    function endInvestment(uint256 finalAmount) public {
+        require(backers[msg.sender].amountInvested > 0);
+
+        backers[msg.sender].recipient.transfer(finalAmount);
+        totalBackers--;
+        delete backers[msg.sender];
+    }
+
+    function getBackerInfo() public view returns (Backer memory) {
+        Backer memory backer = backers[msg.sender];
+
+        return backer;
+    }
+
+    //==================================================================
 
     function holdElection() public contractParticipant {
         // require(block.timestamp > electionDate + leaderTerm);
@@ -107,35 +145,34 @@ contract Governance {
 
     //==================================================================
 
-    //section for creating and administrating projects by the leader
+    function createProject(uint value, address payable targetReciever,string memory description) public restricted {
+        Project storage project = projects[totalProjects++];
 
-    function createInvestment(uint value, address payable targetReciever) public restricted {
-        Investment storage investment = investments[totalInvestments++];
-
-        investment.value = value;
-        investment.targetReciever = targetReciever;
-        investment.closed = false;
-        investment.approvalCount = 0;
+        project.value = value;
+        project.description = description;
+        project.targetReciever = targetReciever;
+        project.closed = false;
+        project.approvalCount = 0;
     }
 
-    function approveInvestment(uint index) public {
-        Investment storage investment = investments[index];
+    function approveProject(uint index) public {
+        Project storage project = projects[index];
 
         require(approvers[msg.sender]);
-        require(!investment.approvals[msg.sender]);
+        require(!project.approvals[msg.sender]);
 
-        investment.approvals[msg.sender] = true;
-        investment.approvalCount++;
+        project.approvals[msg.sender] = true;
+        project.approvalCount++;
     }
 
-    function finalizeInvestment(uint index) public restricted {
-        Investment storage investment = investments[index];
+    function finalizeProject(uint index) public restricted {
+        Project storage project = projects[index];
 
-        require(investment.approvalCount > (totalApprovers / 2));
-        require(!investment.closed);
+        require(project.approvalCount > (totalApprovers / 2));
+        require(!project.closed);
 
-        investment.targetReciever.transfer(investment.value);
-        investment.closed = true;
+        project.targetReciever.transfer(project.value);
+        project.closed = true;
     }
 
     //==================================================================
@@ -144,19 +181,18 @@ contract Governance {
     
     function payContribution() public payable {
         require(msg.value > weiAmountToEnter); //default unit is wei
+        require(contributorsInfo[msg.sender] == false);
+
         contributorsInfo[msg.sender] = true;
         contributors.push(msg.sender);
     }
 
-    //==================================================================
-
-    //section for dealing with contract maintenance
-
-    function closeMonth() public payable restricted {
+      function closeMonth() public payable restricted {
         require(hasPassedOneMont());
         require(msg.value > .01 ether);
         
         for (uint256 index = 0; contributors.length < index; index++) {
+            contributorsInfo[contributors[index]] = false;
             delete contributorsInfo[contributors[index]];
         }
 
