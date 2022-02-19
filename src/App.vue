@@ -1,42 +1,41 @@
 <template>
   <div id="app">
-    <div id="header">Interface Gráfica Contrato Inteligente</div>
-    <div id="body">
+    <!-- <div id="header">Interface Gráfica Contrato Inteligente</div> -->
+    <!-- <div id="body"> -->
       <div id="side-menu">
         <button @click="contribute">
           Contribua
         </button>
-        <button>
-          Eleições
-        </button>
-        <button>
-          Investir
-        </button>
-        <button>
-          Criar Projeto
-        </button>
-        <button>
+        <button v-if="isLeader" @click="closeMonth">
           Fechar Mês
         </button>
-        <button>
-          Fechar Mês
-        </button>
+        {{isContributor}}
       </div>
-      <div id="main-page">
-        <Investment :contractInstance="contractInstance" :balance="balance" />
-        <Project :contractInstance="contractInstance" />
-        <span>Seja bem-vindo ao painel de controle de governança!</span>
+      <!-- <div id="main-page">  -->
+        <div>
+           <Investment :contractInstance="contractInstance" :balance="balance" />
+        </div>
+        <div>
+          <Project :contractInstance="contractInstance" />
+        </div>
+        <div>
+          <Election :contractInstance="contractInstance" />
+        </div>
+
+       
+        <!-- <span>Seja bem-vindo ao painel de controle de governança!</span>
         <span>Balanço do contrato em Wei: {{ balance }}</span>
         <span id="error">{{ errorMessage }}</span>
-        <span>Account connected: {{ account }}</span>
-      </div>
-    </div>
+        <span>Account connected: {{ account }}</span> -->
+     <!-- </div> -->
+    <!-- </div> -->
   </div>
 </template>
 
 <script>
 import Investment from './components/Investment.vue';
 import Project from './components/Project.vue';
+import Election from './components/Election.vue';
 import contractObject from "./ethereum/contractObject.json"
 import web3 from "./ethereum/web3.js"
 
@@ -47,11 +46,16 @@ export default {
     const accounts = await web3.eth.getAccounts();
     this.account = await accounts[0];
 
+    this.leader = await this.contractInstance.methods.leader().call();
+
     this.balance = await this.contractInstance.methods.getBalance().call();
+
+    this.getIsContributor();
   },
   components: {
     Investment,
-    Project
+    Project,
+    Election
   },
   data () {
     return {
@@ -61,7 +65,9 @@ export default {
       contractInstance: new web3.eth.Contract(
         contractObject.interface,
         contractObject.address
-      )
+      ),
+      isContributor: "Carregando...",
+      leader: null
     }
   },
   methods: {
@@ -76,10 +82,28 @@ export default {
         this.errorMessage = "Ocorreu um erro na transação com a seguinte mensagem: " + err.message;
         console.log(err);
       }
-
     },
     async getContributors() {
       this.contractInstance.methods.getBalance().call().then(console.log)
+    },
+    async closeMonth() {
+      await this.contractInstance.methods.closeMonth().send({
+        from: this.account,
+        value: "1000"
+      })
+      console.log("closemonth called")
+    },
+    async getIsContributor() {
+      console.log("is contributor called")
+      this.isContributor = await this.contractInstance.methods.isContributor().call({
+        from: this.account
+      })
+      console.log(this.isContributor)
+    }
+  },
+  computed: {
+    isLeader: function () {
+        return  this.leader == this.account;
     }
   }
 }
@@ -88,6 +112,7 @@ export default {
 <style>
 body {
   margin: 0;
+  background-image: linear-gradient(to bottom right, rgb(36, 13, 165), rgb(255, 0, 221));
 }
 
 #app {
@@ -97,6 +122,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  max-height: 100vh;
+  min-height: 100vh;
+  flex-wrap: wrap;
+  padding:30px;
 }
 
 #header {
@@ -116,9 +146,11 @@ body {
   display: flex;
   flex-direction: line;
   justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 #side-menu {
+  width: 200px;
   padding: 0 30px 0 10px;
   display: flex;
   flex-direction: column;
@@ -127,6 +159,7 @@ body {
 #main-page {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
 }
 
 #error{
@@ -137,7 +170,7 @@ button {
   cursor: pointer;
   font-weight: bold;
   font-size: 15px;
-  background-color: rgb(245, 212, 245);
+  background-color: rgb(212, 238, 245);
   border: 2px rgb(255, 255, 255) solid;
   padding: 15px 60px;
   margin: 5px;
@@ -168,6 +201,10 @@ textarea {
   outline: none;
   margin: 5px;
   font-weight: bolder;
+}
+
+#component {
+  margin: 20px;
 }
 
 

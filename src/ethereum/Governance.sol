@@ -103,7 +103,7 @@ contract Governance {
         // require(block.timestamp > lastClosingMonthDate + 5 days);
         // require(block.timestamp < lastClosingMonthDate + 10 days);
 
-        electionDate = block.timestamp;
+        // electionDate = block.timestamp;
 
         Election storage election = elections[totalElections++];
         election.closed = false;
@@ -156,13 +156,13 @@ contract Governance {
     }
 
     function approveProject(uint index) public {
-        Project storage project = projects[index];
+        // Project storage project = projects[index];
 
         require(approvers[msg.sender]);
-        require(!project.approvals[msg.sender]);
+        // require(!project.approvals[msg.sender]);
 
-        project.approvals[msg.sender] = true;
-        project.approvalCount++;
+        // projects[index].approvals[msg.sender] = true;
+        // projects[index].approvalCount++;
     }
 
     function finalizeProject(uint index) public restricted {
@@ -188,8 +188,8 @@ contract Governance {
     }
 
       function closeMonth() public payable restricted {
-        require(hasPassedOneMont());
-        require(msg.value > .01 ether);
+        // require(hasPassedOneMont());
+        // require(msg.value > .01 ether);
         
         for (uint256 index = 0; contributors.length < index; index++) {
             contributorsInfo[contributors[index]] = false;
@@ -199,6 +199,13 @@ contract Governance {
         delete contributors;
     }
 
+    function isContributor() public view returns (bool) {
+        if (msg.sender == leader || contributorsInfo[msg.sender] == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     //==================================================================
 
     //financial info from contract
