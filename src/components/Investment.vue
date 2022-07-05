@@ -1,5 +1,5 @@
 <template>
-  <div id="investment-page">
+  <div id="project-page">
       <div id="is-investor" v-if="!isInvestor">
         <h1>Investir</h1>
         <p style="margin-bottom: 30px">
@@ -33,6 +33,7 @@ export default {
 
         const accounts = await web3.eth.getAccounts();
         this.account = await accounts[0];
+        await this.getPotentialProfit();
 
         this.backerInfo = await this.contractInstance.methods.getBackerInfo().call({
             from: this.account
@@ -57,13 +58,15 @@ export default {
                 from: this.account
             })
 
-            console.log("Pedido concluído");
 
             this.backerInfo = await this.contractInstance.methods.getBackerInfo().call({
                     from: this.account
             })
 
             this.getPotentialProfit()
+
+            document.location.reload(true);
+
         },
         async getProfit() {
             const balance = await this.contractInstance.methods.getBalance().call(); 
@@ -77,13 +80,16 @@ export default {
             console.log("Retornando " + Number(response.data.total_profit) + " em rendimentos")
             this.contractInstance.methods.endInvestment(response.data.total_profit).send({
                 from: this.account,
-                gas: "50000"
             }).then(() => {
                 console.log("Faturamento realizado")
             })
         },
         async getPotentialProfit() {
             const balance = await this.contractInstance.methods.getBalance().call(); 
+
+            console.log(balance)
+            console.log(this.backerInfo.balance)
+            console.log(this.backerInfo.amountInvested)
 
             const response = await axios.post('http://localhost:9000/governance/investment-profit', {
                 "current_balance": balance,
@@ -104,17 +110,6 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-#investment-page{
-    font-weight: bolder;
-    color: white;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 30px;
-    background-color: rgb(4, 19, 59);
-    border-radius: 10px;
-    max-width: 400px;
-}
 
 #input-group {
     display: flex;

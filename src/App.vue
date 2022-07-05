@@ -1,34 +1,33 @@
 <template>
+
   <div id="app">
-    <!-- <div id="header">Interface Gráfica Contrato Inteligente</div> -->
     <!-- <div id="body"> -->
-      <div id="side-menu">
-        <button @click="contribute">
-          Contribua
-        </button>
-        <button v-if="isLeader" @click="closeMonth">
-          Fechar Mês
-        </button>
-        {{isContributor}}
-      </div>
-      <!-- <div id="main-page">  -->
-        <div>
-           <Investment :contractInstance="contractInstance" :balance="balance" />
-        </div>
-        <div>
-          <Project :contractInstance="contractInstance" />
-        </div>
-        <div>
-          <Election :contractInstance="contractInstance" />
-        </div>
+    <div id="header">
+      <span id="header-element">Seja bem-vindo ao painel de controle de governança!</span> 
+      <span id="header-element">Balanço do contrato em Wei: {{ balance }}</span>
+        <!-- <span id="error">{{ errorMessage }}</span> -->
+      <span id="header-element">Conta conectada: {{ account }}</span>
+    </div>
+
+    <div id="side-menu">
+      <button v-show="!isContributor" @click="contribute">Contribua</button>
+      <div v-show="isContributor">Você é um contibridor dessa organização!</div>
+    </div>
+
+    <div id="projects-menu">
+      <Project :contractInstance="contractInstance" />
+    </div>
+   
+    <div id="projects-menu">
+      <Investment :contractInstance="contractInstance" :balance="balance" />
+    </div>
+       
+    <div id="projects-menu">
+      <Election :contractInstance="contractInstance" />
+    </div>
 
        
-        <!-- <span>Seja bem-vindo ao painel de controle de governança!</span>
-        <span>Balanço do contrato em Wei: {{ balance }}</span>
-        <span id="error">{{ errorMessage }}</span>
-        <span>Account connected: {{ account }}</span> -->
-     <!-- </div> -->
-    <!-- </div> -->
+    
   </div>
 </template>
 
@@ -66,22 +65,23 @@ export default {
         contractObject.interface,
         contractObject.address
       ),
-      isContributor: "Carregando...",
+      isContributor: false,
       leader: null
     }
   },
   methods: {
     async contribute() {
-      try {
-        const leader = await this.contractInstance.methods.payContribution().send({ 
-          value: "1000",
+        console.log("calling transaction contribute()")
+
+         this.contractInstance.methods.payContribution().send({ 
+          value: "100000",
           from: this.account
-        });
-        console.log(leader);
-      } catch (err) {
-        this.errorMessage = "Ocorreu um erro na transação com a seguinte mensagem: " + err.message;
-        console.log(err);
-      }
+        })    
+        .then(msg => {
+          document.location.reload(true);
+          console.log("successfull transaction: " + msg)
+        })
+        .catch(err => console.log(err))
     },
     async getContributors() {
       this.contractInstance.methods.getBalance().call().then(console.log)
@@ -89,7 +89,7 @@ export default {
     async closeMonth() {
       await this.contractInstance.methods.closeMonth().send({
         from: this.account,
-        value: "1000"
+        value: "10000"
       })
       console.log("closemonth called")
     },
@@ -112,7 +112,6 @@ export default {
 <style>
 body {
   margin: 0;
-  background-image: linear-gradient(to bottom right, rgb(36, 13, 165), rgb(255, 0, 221));
 }
 
 #app {
@@ -121,25 +120,22 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: flex-start;
-  max-height: 100vh;
+ 
   min-height: 100vh;
   flex-wrap: wrap;
-  padding:30px;
 }
 
 #header {
-  height: 100px;
+  height: 50px;
   width: 100%;
   display: flex;
-  flex-direction: line;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  font-size: 25px;
-  font-weight: bolder;
+  justify-content: space-between;
+  font-size: 15px;
   border-bottom: 2px solid black;
-  margin-bottom: 30px;
 }
 
 #body{
@@ -151,9 +147,17 @@ body {
 
 #side-menu {
   width: 200px;
-  padding: 0 30px 0 10px;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+#projects-menu {
+  width: 500px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
 }
 
 #main-page {
@@ -170,11 +174,11 @@ button {
   cursor: pointer;
   font-weight: bold;
   font-size: 15px;
-  background-color: rgb(212, 238, 245);
-  border: 2px rgb(255, 255, 255) solid;
+  background-color: rgb(243, 243, 243);
+  border: 2px rgb(0, 0, 0) solid;
   padding: 15px 60px;
   margin: 5px;
-  border-radius: 10px;
+  border-radius: 2px;
 }
 
 button:hover{
@@ -186,7 +190,7 @@ button:active {
 }
 
 input {
-  border-radius: 10px;
+  border-radius: 3px;
   border: none;
   padding: 5px;
   outline: none;
@@ -195,17 +199,43 @@ input {
 }
 
 textarea {
-  border-radius: 10px;
+  border-radius: 3px;
   border: none;
   padding: 5px;
   outline: none;
   margin: 5px;
   font-weight: bolder;
+  width: 400px;
+  height: 100px;
 }
 
 #component {
   margin: 20px;
 }
 
+#project-page {
+    font-weight: bolder;
+    color: white;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    background-color: rgb(0, 0, 0);
+    border-radius: 3px;
+    margin-bottom: 10px;
+}
+
+#card{
+    font-weight: bolder;
+    color: white;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgb(46, 46, 46);
+    border-radius: 10px;
+    max-width: 400px;
+    padding: 20px;
+    margin-bottom: 10px;
+}
 
 </style>

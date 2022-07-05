@@ -3,12 +3,15 @@ import HDWalletProvider from "@truffle/hdwallet-provider";
 import Web3 from "web3";
 import fs from "fs";
 
+// provider infura para conexão na rede pública rinkeby
 const provider = new HDWalletProvider(
   "orchard absorb series asthma hole scatter make flush pass high echo lady",
   "https://rinkeby.infura.io/v3/d2659fd6ed594183a92e29330e7b5f14"
 );
-const web3 = new Web3(provider);
 
+// const web3 = new Web3(provider);
+
+const web3 = new Web3('http://localhost:8543');
 
 const contractName = 'Governance'
 
@@ -31,7 +34,6 @@ const deploy = async () => {
 
 
   fs.writeFile('contractObject.json', JSON.stringify(contractObject), ()=>{});
-
   console.log("Contract deployed to", contract.options.address);
 };
 

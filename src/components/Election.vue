@@ -5,7 +5,7 @@
         <button @click="callElection()">Iniciar Eleição</button>
         <button @click="candidate()">Canditatar-se</button>
         <div id="card">
-            <input v-model="address">
+            <input placeholder="endereço do candidato" v-model="address">
             <button @click="vote()">Votar</button>
         </div>
         <button @click="endElection()">Computar Eleição</button>
@@ -69,31 +69,3 @@ export default {
     } 
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-#project-page{
-    font-weight: bolder;
-    color: white;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 30px;
-    background-color: rgb(4, 19, 59);
-    border-radius: 10px;
-    max-width: 400px;
-    margin: 20px 0
-}
-
-#card{
-    font-weight: bolder;
-    color: white;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: rgb(170, 170, 170);
-    border-radius: 10px;
-    max-width: 400px;
-    padding: 20px;
-}
-</style>

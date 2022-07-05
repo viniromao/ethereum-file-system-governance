@@ -15,7 +15,9 @@ contract Governance {
         string description;
         bool closed;
         uint approvalCount;
+        uint denialCount;
         mapping(address => bool) approvals;
+        mapping(address => bool) denials;
     }
 
     struct Election {
@@ -39,7 +41,7 @@ contract Governance {
     mapping(uint => Election) public elections;
 
     uint public totalApprovers;
-    mapping(address => bool) public approvers;
+    // mapping(address => bool) public approvers;
 
     uint public totalProjects = 0;
     mapping (uint => Project) public projects;
@@ -145,7 +147,7 @@ contract Governance {
 
     //==================================================================
 
-    function createProject(uint value, address payable targetReciever,string memory description) public restricted {
+    function createProject(uint value, address payable targetReciever,string memory description) public contractParticipant {
         Project storage project = projects[totalProjects++];
 
         project.value = value;
@@ -156,19 +158,30 @@ contract Governance {
     }
 
     function approveProject(uint index) public {
-        // Project storage project = projects[index];
-
-        require(approvers[msg.sender]);
-        // require(!project.approvals[msg.sender]);
-
-        // projects[index].approvals[msg.sender] = true;
-        // projects[index].approvalCount++;
-    }
-
-    function finalizeProject(uint index) public restricted {
         Project storage project = projects[index];
 
-        require(project.approvalCount > (totalApprovers / 2));
+        require(!project.approvals[msg.sender]);
+        require(!project.denials[msg.sender]);
+
+
+        projects[index].approvals[msg.sender] = true;
+        projects[index].approvalCount++;
+    }
+
+      function denialProject(uint index) public {
+        Project storage project = projects[index];
+
+        require(!project.approvals[msg.sender]);
+        require(!project.denials[msg.sender]);
+
+        projects[index].denials[msg.sender] = true;
+        projects[index].denialCount++;
+    }
+
+    function finalizeProject(uint index) public {
+        Project storage project = projects[index];
+
+        require(project.approvalCount > project.denialCount);
         require(!project.closed);
 
         project.targetReciever.transfer(project.value);

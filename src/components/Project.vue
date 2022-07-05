@@ -1,6 +1,6 @@
 <template>
-    <div v-if="isLeader" id="project-page">
-        <h1>Painel do Líder</h1>
+    <div id="project-page">
+        <h2>Criar Projeto</h2>
         <div id="card">
             <h3>Criar novo projeto</h3>
             <textarea v-model="description" type="text-box" placeholder="Descrição" />
@@ -9,14 +9,21 @@
             <button @click="createProject()">Criar</button>
             <div id="error">{{errorMessage}}</div>
         </div>
-        Líder: {{leader}} is Líder 
     </div>
     <div v-if="fetchData != false && projects.length > 0" id="project-page">
         <div v-for="(project, index) in projects" :key="index" id="card">
-            <p>Descrição do projeto: {{project.description}}</p>
-            <p>Beneficiado: {{project.targetReciever}}</p>
+            <span> {{project.description}}</span>
+            <p>Beneficiado: </p>
+            <span id="beneficiado">{{project.targetReciever}}</span>
             <p>Valor em Wei: {{project.value}}</p>
-            <button @click="approveProject(index)">Aprovar</button>
+            <p>Votos:</p>
+            <span>
+                <span class="green">{{project.approvalCount}}</span> X <span class="red">{{project.denialCount}}</span>
+            </span>
+            <span>
+                <button @click="approveProject(index)">Aprovar</button>
+                <button @click="denialProject(index)">Reprovar</button>
+            </span>
             <button v-if="isLeader" @click="finalizeProject(index)">Finalizar</button>
         </div>
     </div>
@@ -30,7 +37,10 @@ export default {
     props: ['contractInstance'],
     async created() {
         this.leader = await this.contractInstance.methods.leader().call();
+        this.approvers = await this.contractInstance.methods.projects(0).call();
+        console.log(this.contractInstance)
 
+        console.log(this.approvers)
         const accounts = await web3.eth.getAccounts();
         this.account = await accounts[0];
 
@@ -39,6 +49,7 @@ export default {
     data () {
         return {
             leader: null,
+            approvers: null,
             account: null,
             address: null,
             value: null,
@@ -49,12 +60,7 @@ export default {
         }
     },
     methods: {
-        async createProject() {
-            console.log("Instância para criar o projeto")
-            await this.contractInstance.methods.createProject(this.value, this.address, this.description).send({
-                from: this.account
-            }).then(()=> console.log("criado com sucesso")).catch((err)=> console.log(err))
-        },
+       
         async getProjects() {
             let project;
 
@@ -74,11 +80,26 @@ export default {
             }         
             this.fetchData = true;
         },
+         async createProject() {
+            console.log("Instância para criar o projeto")
+            await this.contractInstance.methods.createProject(this.value, this.address, this.description).send({
+                from: this.account})
+            .then(()=> {
+                document.location.reload(true);
+                console.log("criado com sucesso")})
+            .catch((err)=> console.log(err))
+        },
         async approveProject(index) {
-
+            console.log(index)
             console.log(this.projects[index])
             await this.contractInstance.methods.approveProject(index).send({
-                value: "1000",
+                from: this.account
+            }).then((res) => console.log(res)).catch((err)=>console.log(err));
+        },
+          async denialProject(index) {
+            console.log(index)
+            console.log(this.projects[index])
+            await this.contractInstance.methods.denialProject(index).send({
                 from: this.account
             }).then((res) => console.log(res)).catch((err)=>console.log(err));
         },
@@ -101,29 +122,17 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-#project-page{
-    font-weight: bolder;
-    color: white;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 30px;
-    background-color: rgb(4, 19, 59);
-    border-radius: 10px;
-    max-width: 400px;
+
+#beneficiado {
+    font-size: small;
+    background-color: black;
 }
 
-#card{
-    font-weight: bolder;
-    width: 80%;
-    color: white;
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: rgb(170, 170, 170);
-    border-radius: 10px;
-    max-width: 400px;
-    margin: 20px 0;
-    padding: 20px;
+.green{
+    color: greenyellow;
+}
+
+.red {
+    color: red;
 }
 </style>
